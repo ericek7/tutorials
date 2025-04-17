@@ -8,6 +8,8 @@
             <list string="Estates">
                 <field name="price"/>
                 <field name="partner_id"/>
+                <field name="validity"/>
+                <field name="deadline_date"/>
                 <field name="status"/>
             </list>
         </field>
@@ -21,6 +23,8 @@
                 <group>
                     <field name="price"/>
                     <field name="partner_id"/>
+                    <field name="validity"/>
+                    <field name="deadline_date"/>
                     <field name="status"/>
                 </group>
             </form>
