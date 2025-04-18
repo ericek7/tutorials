@@ -1,4 +1,4 @@
-from odoo import fields, models, api
+from odoo import fields, models, api, exceptions
 from datetime import datetime, timedelta
 
 
@@ -40,12 +40,14 @@ class EstateProperty(models.Model):
         ],
         required=True,
         copy=False,
+        readonly=True,
         default="new",
     )
     buyer_id = fields.Many2one(
         comodel_name='res.partner',
         string='Buyer',
         copy=False,
+        readonly=True,
     )
     salesman_id = fields.Many2one(
         comodel_name='res.users',
@@ -69,7 +71,10 @@ class EstateProperty(models.Model):
     @api.depends("offer_ids.price")
     def _compute_best_price(self):
         for record in self:
-            record.best_price = max(offer.price for offer in record.offer_ids)
+            if not record.offer_ids:
+                record.best_price = 0
+            else:
+                record.best_price = max(offer.price for offer in record.offer_ids)
 
     @api.onchange("garden")
     def _onchange_garden(self):
@@ -84,3 +89,15 @@ class EstateProperty(models.Model):
     def _onchange_salesman(self):
         self.name = f'House of {self.salesman_id.name}'
         self.description = f'This house is being sold by {self.salesman_id.name}'
+
+    def action_do_sell(self):
+        if self.state == 'cancelled':
+            raise exceptions.UserError('Cancelled properties cannot be sold.')
+        self.state = "sold"
+        return True
+
+    def action_do_cancel(self):
+        if self.state == 'sold':
+            raise exceptions.UserError('Sold properties cannot be cancelled.')
+        self.state = "cancelled"
+        return True
