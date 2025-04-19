@@ -5,20 +5,51 @@ from datetime import datetime, timedelta
 class EstateProperty(models.Model):
     _name = "estate.property"
     _description = "Estate Property"
-    _order = "name"
+    _order = "id desc"
 
-    name = fields.Char("Name", required=True)
-    description = fields.Text("Property Description")
-    postcode = fields.Char("Postcode")
-    date_available = fields.Date("Available From", copy=False, default=datetime.today() + timedelta(days=90))
-    expected_price = fields.Float("Expected Price", required=True)
-    selling_price = fields.Float("Selling Price", readonly=True, copy=False)
-    bedrooms = fields.Integer("Bedrooms", default=2)
-    living_area = fields.Integer("Living Area (sqm)")
-    facades = fields.Integer("Facades")
-    garage = fields.Boolean("Garage")
-    garden = fields.Boolean("Garden")
-    garden_area = fields.Integer("Garden Area (sqm)")
+    name = fields.Char(
+        string="Title",
+        required=True
+    )
+    description = fields.Text(
+        string="Property Description"
+    )
+    postcode = fields.Char(
+        string="Postcode"
+    )
+    date_available = fields.Date(
+        string="Available From",
+        copy=False,
+        default=datetime.today() + timedelta(days=90)
+    )
+    expected_price = fields.Float(
+        string="Expected Price",
+        required=True
+    )
+    selling_price = fields.Float(
+        string="Selling Price",
+        readonly=True,
+        copy=False
+    )
+    bedrooms = fields.Integer(
+        string="Bedrooms",
+        default=2
+    )
+    living_area = fields.Integer(
+        string="Living Area (sqm)"
+    )
+    facades = fields.Integer(
+        string="Facades"
+    )
+    garage = fields.Boolean(
+        string="Garage"
+    )
+    garden = fields.Boolean(
+        string="Garden"
+    )
+    garden_area = fields.Integer(
+        string="Garden Area (sqm)"
+    )
     garden_orientation = fields.Selection(
         string="Garden Orientation",
         selection=[
@@ -28,7 +59,10 @@ class EstateProperty(models.Model):
             ('west', 'West'),
         ],
     )
-    active = fields.Boolean(string="Active", default=True)
+    active = fields.Boolean(
+        string="Active",
+        default=True
+    )
     state = fields.Selection(
         string="State",
         selection=[
@@ -57,11 +91,26 @@ class EstateProperty(models.Model):
     property_type_id = fields.Many2one(
         comodel_name='estate.property.type',
         string='Property Type',
+        options="{'no_create': True, 'no_edit': True}",
     )
-    tag_ids = fields.Many2many("estate.property.tag", string="Tag")
-    offer_ids = fields.One2many("estate.property.offer", "property_id", string='Offers')
-    total_area = fields.Integer("Total Area (sqm)", compute="_compute_total_area")
-    best_price = fields.Float("Best Offer", compute="_compute_best_price")
+    tag_ids = fields.Many2many(
+        "estate.property.tag",
+        string="Tag",
+        options="{'color_field': 'color'}"
+    )
+    offer_ids = fields.One2many(
+        "estate.property.offer",
+        "property_id",
+        string='Offers'
+    )
+    total_area = fields.Integer(
+        string="Total Area (sqm)",
+        compute="_compute_total_area"
+    )
+    best_price = fields.Float(
+        string="Best Offer",
+        compute="_compute_best_price"
+    )
 
     _sql_constraints = [
         ('check_expected_price', 'CHECK(expected_price > 0)', 'The expected price must be greater than 0.'),
@@ -94,6 +143,20 @@ class EstateProperty(models.Model):
     def _onchange_salesman(self):
         self.name = f'House of {self.salesman_id.name}'
         self.description = f'This house is being sold by {self.salesman_id.name}'
+
+    @api.model
+    def create(self, vals):
+        record = super().create(vals)
+        if record.state == 'new' and record.offer_ids:
+            record.state = 'offer_received'
+        return record
+
+    def write(self, vals):
+        res = super().write(vals)
+        for record in self:
+            if record.state == 'new' and record.offer_ids:
+                record.state = 'offer_received'
+        return res
 
     @api.constrains('selling_price', 'expected_price')
     def _check_selling_price(self):

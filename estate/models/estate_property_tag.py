@@ -9,4 +9,10 @@ class EstatePropertyTag(models.Model):
         ("unique_tag_name", "UNIQUE(name)", "Tag name must be unique."),
     ]
 
-    name = fields.Char("Name", required=True)
+    name = fields.Char(
+        string="Name",
+        required=True
+    )
+    color = fields.Integer(
+        string='Color'
+    )
