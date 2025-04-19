@@ -1,4 +1,4 @@
-from odoo import fields, models, api, exceptions
+from odoo import fields, models, api, exceptions, tools
 from datetime import date, timedelta
 
 
@@ -66,6 +66,29 @@ class EstatePropertyOffer(models.Model):
     def _compute_inverse_deadline(self):
         for record in self:
             record.validity = (record.deadline_date - record.create_date).days
+
+    @api.model
+    def create(self, vals):
+        existing_offers = self.env['estate.property.offer'].search([('property_id', '=', vals['property_id'])])
+        new_price = vals.get('price', 0.0)
+        max_existing_price = max(existing_offers.mapped('price'), default=0.0)
+
+        if tools.float_compare(new_price, max_existing_price, precision_digits=2) <= 0:
+            raise exceptions.ValidationError("Offer amount must be greater than or equal to existing offers.")
+
+        return super().create(vals)
+
+    def write(self, vals):
+        for record in self:
+            if 'price' in vals:
+                existing_offers = self.env['estate.property.offer'].search([('property_id', '=', record.property_id.id), ('id', '!=', record.id)])
+                new_price = vals.get('price')
+                max_existing_price = max(existing_offers.mapped('price'), default=0.0)
+
+                if tools.float_compare(new_price, max_existing_price, precision_digits=2) <= 0:
+                    raise exceptions.ValidationError("Offer amount must be greater than or equal to existing offers.")
+
+        return super().write(vals)
 
     def action_accept(self):
         if self.property_id.state == "sold":

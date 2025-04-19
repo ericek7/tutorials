@@ -28,6 +28,7 @@
         <field name="arch" type="xml">
             <list string="Estates" default_order="expected_price asc" decoration-success="state in ['offer_received', 'offer_accepted']" decoration-bf="state == 'offer_accepted'" decoration-muted="state == 'sold'" decoration-danger="state == 'cancelled'">
                 <field name="name"/>
+                <field name="property_type_id"/>
                 <field name="postcode"/>
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
                 <field name="bedrooms"/>

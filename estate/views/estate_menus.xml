@@ -9,5 +9,6 @@
     <menuitem id="settings_menu" name="Settings" parent="estate_menu_root"/>
     <menuitem id="settings_menu_type_action" parent="settings_menu" action="estate_property_type_action"/>
     <menuitem id="settings_menu_tag_action" parent="settings_menu" action="estate_property_tag_action"/>
+    <menuitem id="setting_menu_users_action" parent="settings_menu" action="estate_users_action"/>
 
 </odoo>
