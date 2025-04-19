@@ -14,5 +14,5 @@ class EstatePropertyTag(models.Model):
         required=True
     )
     color = fields.Integer(
-        string='Color'
+        string="Color"
     )

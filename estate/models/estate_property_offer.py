@@ -11,14 +11,14 @@ class EstatePropertyOffer(models.Model):
         string="Price"
     )
     state = fields.Selection(
-        string='Status',
+        string="Status",
         selection=[
             ("accepted", "Accepted"),
             ("refused", "Refused")
         ],
         copy=False,
         readonly=True,
-        default='',
+        default="",
     )
     partner_id = fields.Many2one(
         "res.partner",
@@ -44,17 +44,17 @@ class EstatePropertyOffer(models.Model):
         inverse="_compute_inverse_deadline"
     )
     property_state = fields.Selection(
-        related='property_id.state',
+        related="property_id.state",
         store=True
     )
     property_type_id = fields.Many2one(
-        related='property_id.property_type_id',
+        related="property_id.property_type_id",
         store=True,
         readonly=True
     )
 
     _sql_constraints = [
-        ('check_offer_price', 'CHECK(price > 0)', 'The offer price must be greater than 0.'),
+        ("check_offer_price", "CHECK(price > 0)", "The offer price must be greater than 0."),
     ]
 
     @api.depends("create_date", "validity")
@@ -69,9 +69,9 @@ class EstatePropertyOffer(models.Model):
 
     @api.model
     def create(self, vals):
-        existing_offers = self.env['estate.property.offer'].search([('property_id', '=', vals['property_id'])])
-        new_price = vals.get('price', 0.0)
-        max_existing_price = max(existing_offers.mapped('price'), default=0.0)
+        existing_offers = self.env["estate.property.offer"].search([("property_id", "=", vals["property_id"])])
+        new_price = vals.get("price", 0.0)
+        max_existing_price = max(existing_offers.mapped("price"), default=0.0)
 
         if tools.float_compare(new_price, max_existing_price, precision_digits=2) <= 0:
             raise exceptions.ValidationError("Offer amount must be greater than or equal to existing offers.")
@@ -80,10 +80,10 @@ class EstatePropertyOffer(models.Model):
 
     def write(self, vals):
         for record in self:
-            if 'price' in vals:
-                existing_offers = self.env['estate.property.offer'].search([('property_id', '=', record.property_id.id), ('id', '!=', record.id)])
-                new_price = vals.get('price')
-                max_existing_price = max(existing_offers.mapped('price'), default=0.0)
+            if "price" in vals:
+                existing_offers = self.env["estate.property.offer"].search([("property_id", "=", record.property_id.id), ("id", "!=", record.id)])
+                new_price = vals.get("price")
+                max_existing_price = max(existing_offers.mapped("price"), default=0.0)
 
                 if tools.float_compare(new_price, max_existing_price, precision_digits=2) <= 0:
                     raise exceptions.ValidationError("Offer amount must be greater than or equal to existing offers.")
@@ -92,13 +92,13 @@ class EstatePropertyOffer(models.Model):
 
     def action_accept(self):
         if self.property_id.state == "sold":
-            raise exceptions.UserError('Property is already sold.')
+            raise exceptions.UserError("Property is already sold.")
         if self.property_id.state == "cancelled":
-            raise exceptions.UserError('Property is already cancelled.')
+            raise exceptions.UserError("Property is already cancelled.")
         if self.property_id.state == "offer_accepted":
-            raise exceptions.UserError('An offer for the property is already accepted.')
-        if self.state == 'refused':
-            raise exceptions.UserError('Offer has been already refused.')
+            raise exceptions.UserError("An offer for the property is already accepted.")
+        if self.state == "refused":
+            raise exceptions.UserError("Offer has been already refused.")
         self.state = "accepted"
         self.property_id.state = "offer_accepted"
         self.property_id.selling_price = self.price
@@ -106,7 +106,7 @@ class EstatePropertyOffer(models.Model):
         return True
 
     def action_refuse(self):
-        if self.state == 'accepted':
-            raise exceptions.UserError('Offer has been already accepted.')
+        if self.state == "accepted":
+            raise exceptions.UserError("Offer has been already accepted.")
         self.state = "refused"
         return True
